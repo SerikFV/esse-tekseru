@@ -14,7 +14,7 @@ def main():
         return
     password = secrets.token_hex(24)
     with os.fdopen(fd, "w", encoding="utf-8") as file:
-        file.write("GEMINI_API_KEY=\nGEMINI_MODEL=gemini-2.5-flash\nGEMINI_TIMEOUT_SECONDS=90\n"
+        file.write("GEMINI_API_KEY=\nGEMINI_MODEL=gemini-3.1-flash-lite\nGEMINI_TIMEOUT_SECONDS=90\n"
                    f"DATABASE_URL=postgresql+psycopg://esse:{password}@127.0.0.1:5432/esse\n"
                    f"POSTGRES_PASSWORD={password}\n")
     print("Created ignored .env with random database credentials. Set GEMINI_API_KEY securely.")

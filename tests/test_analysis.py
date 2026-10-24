@@ -111,3 +111,52 @@ def test_missing_key_never_calls_provider():
     with pytest.raises(AIError) as raised:
         asyncio.run(service.analyze("Тақырып", ESSAY, []))
     assert raised.value.status == 503
+
+
+def test_total_timeout_includes_waiting_for_available_slot():
+    async def run():
+        service = GeminiAnalyzer(Settings(_env_file=None, gemini_api_key="test-key-not-a-credential", gemini_timeout_seconds=1))
+        service.slots = asyncio.Semaphore(0)
+        with pytest.raises(AIError) as raised:
+            await service.analyze("Тақырып", ESSAY, [])
+        assert raised.value.status == 504
+    asyncio.run(run())
+
+
+def test_invalid_quote_is_repaired_once_and_still_validated(analysis_json):
+    calls = []
+    def handler(request):
+        payload = json.loads(request.content)
+        calls.append(payload)
+        result = copy.deepcopy(analysis_json)
+        if len(calls) == 1:
+            result["structure_map"]["thesis"] = ["Түпнұсқада жоқ сөйлем."]
+        return httpx.Response(200, json={"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": json.dumps(result)}]}}]})
+    result = asyncio.run(analyzer(handler).analyze("Тақырып", ESSAY, []))
+    validate_quotes(result, ESSAY)
+    assert len(calls) == 2
+    assert len(calls[1]["contents"][0]["parts"]) == 2
+
+
+def test_unrepairable_quotes_fail_without_returning_fake_result(analysis_json):
+    calls = []
+    analysis_json["classification"]["quotes"] = ["Ойдан шығарылған дәйексөз."]
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, json={"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": json.dumps(analysis_json)}]}}]})
+    with pytest.raises(AIError):
+        asyncio.run(analyzer(handler).analyze("Тақырып", ESSAY, []))
+    assert len(calls) == 2
+
+
+def test_temporary_provider_outage_is_retried_once(analysis_json):
+    calls = []
+    def handler(request):
+        calls.append(request)
+        if len(calls) == 1:
+            return httpx.Response(503)
+        assert len(json.loads(request.content)["contents"][0]["parts"]) == 1
+        return httpx.Response(200, json={"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": json.dumps(analysis_json)}]}}]})
+    result = asyncio.run(analyzer(handler).analyze("Тақырып", ESSAY, []))
+    validate_quotes(result, ESSAY)
+    assert len(calls) == 2

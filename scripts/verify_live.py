@@ -24,7 +24,9 @@ CASES = {
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--suite", action="store_true", help="Send all 11 cases (uses API quota)")
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--suite", action="store_true", help="Send all 11 cases (uses API quota)")
+    selection.add_argument("--case", choices=list(CASES), help="Run one named case")
     args = parser.parse_args()
     settings = Settings()
     if not settings.gemini_api_key.get_secret_value():
@@ -34,7 +36,8 @@ def main():
         if client.get("/api/health").status_code != 200:
             print("BLOCKED: database is not ready.")
             return 2
-        selected = CASES if args.suite else {"қалыпты": CASES["қалыпты"]}
+        case = args.case or "қалыпты"
+        selected = CASES if args.suite else {case: CASES[case]}
         totals = []
         for name, (title, essay) in selected.items():
             response = client.post("/api/essays/analyze", json={"title": title, "essay_text": essay})
