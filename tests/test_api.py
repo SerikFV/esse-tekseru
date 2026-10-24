@@ -11,7 +11,7 @@ from backend.ai_analyzer import AIError
 from backend.config import Settings
 from backend.database import Database
 from backend.main import create_app
-from backend.schemas import AIAnalysis
+from backend.schemas import AIAnalysis, TopicAlignment
 from test_analysis import ESSAY, analysis_json  # noqa: F401 — shared fixture
 
 
@@ -47,17 +47,22 @@ def test_ui_and_missing_database():
         assert client.post("/api/ocr", files={"image": ("bad.png", b"not an image", "image/png")}).status_code == 422
 
 
-def test_full_postgres_roundtrip(database, analysis_json):
+@pytest.mark.parametrize("topic_status", ["matched", "partial", "mismatched"])
+def test_full_postgres_roundtrip(database, analysis_json, topic_status):
     class FixtureAnalyzer:
-        async def analyze(self, title, essay, markers):
+        async def assess(self, title, essay, markers):
             assert essay == ESSAY
-            return AIAnalysis.model_validate(analysis_json)
+            return AIAnalysis.model_validate(analysis_json), TopicAlignment(
+                status=topic_status, explanation="Тақырып туралы тест түсіндірмесі.",
+                quotes=["білім маңызды"], suggested_title=None if topic_status == "matched" else "Білімнің пайдасы")
 
     with TestClient(create_app(Settings(_env_file=None), analyzer=FixtureAnalyzer(), database=database)) as client:
         response = client.post("/api/essays/analyze", json={"title": "Тест эссесі", "essay_text": ESSAY})
         assert response.status_code == 201, response.text
         result = response.json()
         assert result["total_score"] == 25
+        assert result["topic_alignment"]["status"] == topic_status
+        assert result["title"] == "Тест эссесі"
         assert result["essay_text"] == ESSAY
         assert result["markers"]
         essay_id = result["id"]
@@ -73,7 +78,7 @@ def test_full_postgres_roundtrip(database, analysis_json):
 
 def test_provider_failure_saves_nothing(database):
     class FailingAnalyzer:
-        async def analyze(self, *args):
+        async def assess(self, *args):
             raise AIError("Gemini сұрау лимиті аяқталды.", 429)
     with TestClient(create_app(Settings(_env_file=None), analyzer=FailingAnalyzer(), database=database)) as client:
         assert client.post("/api/essays/analyze", json={"title": "Сынақ", "essay_text": ESSAY}).status_code == 429
@@ -85,7 +90,7 @@ def test_database_connection_failure_does_not_call_ai():
         def initialize(self):
             raise OperationalError("test", None, Exception("private database password"))
     class ForbiddenAnalyzer:
-        async def analyze(self, *args):
+        async def assess(self, *args):
             pytest.fail("AI must not be charged when database is unavailable")
     db = BrokenDatabase()
     db.engine = type("Engine", (), {"dispose": lambda self: None})()

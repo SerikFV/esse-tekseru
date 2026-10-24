@@ -20,12 +20,14 @@ CASES = {
     "салыстырмалы": ("Оқу түрлері", "Онлайн және дәстүрлі оқу бір мақсатқа қызмет етеді, бірақ мүмкіндіктері бөлек. Онлайн сабақ жол уақытын үнемдейді: шалғайдағы оқушы үйден қатысады. Дәстүрлі сабақта мұғалім оқушының түсінбегенін тезірек байқап, бірден түсіндіре алады. Алайда бұл артықшылық сыныптың көлеміне де тәуелді. Сондықтан таңдау оқушының жағдайы мен пәннің ерекшелігіне сай болуы керек."),
     "өте қысқа": ("Оқу", "Оқу пайдалы."),
 }
+CASES["тақырып сәйкес емес"] = ("Қазақстандағы климаттың өзгеруі", CASES["қалыпты"][1])
+CASES["тақырып ішінара сәйкес"] = ("Кітап оқу және спорттың денсаулыққа пайдасы", CASES["қалыпты"][1])
 
 
 def main():
     parser = argparse.ArgumentParser()
     selection = parser.add_mutually_exclusive_group()
-    selection.add_argument("--suite", action="store_true", help="Send all 11 cases (uses API quota)")
+    selection.add_argument("--suite", action="store_true", help="Send all cases (uses API quota)")
     selection.add_argument("--case", choices=list(CASES), help="Run one named case")
     args = parser.parse_args()
     settings = Settings()
@@ -49,8 +51,16 @@ def main():
             try:
                 assert client.get(f"/api/essays/{essay_id}").json() == result
                 assert result["total_score"] == sum(c["score"] for c in result["analysis"]["criteria"].values())
+                alignment = result["topic_alignment"]
+                if name == "тақырып сәйкес емес":
+                    assert alignment["status"] == "mismatched"
+                    assert alignment["suggested_title"] and result["total_score"] > 0
+                if name == "тақырып ішінара сәйкес":
+                    assert alignment["status"] == "partial"
+                    assert alignment["suggested_title"] and result["total_score"] > 0
                 totals.append(result["total_score"])
                 print(f"PASS {name}: {result['total_score']}/100; {result['analysis']['classification']['style']}")
+                print(f"Topic: {alignment['status']}; suggested title: {alignment['suggested_title']}")
             finally:
                 assert client.delete(f"/api/essays/{essay_id}").status_code == 204
         if args.suite and len(set(totals)) == 1:

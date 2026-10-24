@@ -19,6 +19,7 @@ function showResult(data) {
   const analysis=data.analysis;
   $('results').hidden=false; $('results-title').textContent=data.title;
   $('summary').textContent=analysis.summary; $('total-score').textContent=data.total_score;
+  showTopicAlignment(data.topic_alignment);
   $('classification').replaceChildren(node('span',analysis.classification.style+' стиль','classification-label'),node('span',analysis.classification.essay_type+' эссе','classification-label'),node('p',analysis.classification.explanation));
   quotes($('classification'),analysis.classification.quotes);
   $('criteria').replaceChildren();
@@ -36,6 +37,23 @@ function showResult(data) {
   $('markers').replaceChildren();if(!data.markers.length)$('markers').append(node('p','Маркерлер анықталмады.','muted'));
   data.markers.forEach(item=>{ $('markers').append(node('p',`${item.category}: «${item.text}» (${item.start}–${item.end})`),node('blockquote',item.sentence)); });
   $('results').scrollIntoView({behavior:'smooth'});
+}
+function showTopicAlignment(alignment) {
+  const card=$('topic-alignment');
+  card.className='panel topic-alignment';
+  card.replaceChildren(node('h3','Тақырыпқа сәйкестік'));
+  if(!alignment){
+    card.append(node('p','Бұл бұрынғы талдауда тақырып сәйкестігі бөлек тексерілмеген. Жаңа талдау жасаңыз.','muted'));
+    return;
+  }
+  const labels={matched:'Тақырыпқа сәйкес',partial:'Тақырыпқа ішінара сәйкес',mismatched:'Эссе тақырыпқа сай емес',undetermined:'Сәйкестік анықталмады'};
+  if(alignment.status==='partial'||alignment.status==='mismatched')card.classList.add('topic-warning');
+  card.append(node('strong',labels[alignment.status]),node('p',alignment.explanation));
+  quotes(card,alignment.quotes);
+  if(alignment.suggested_title){
+    card.append(node('p','Мәтінге лайық ұсынылатын тақырып:','label'),node('p',alignment.suggested_title,'suggested-title'));
+  }
+  card.append(node('p','Балл эссенің өз мазмұны мен сапасы бойынша есептелді. Тақырыпқа сәйкестік үшін балл шегерілмейді.','muted'));
 }
 async function history(append=false) {
   try {

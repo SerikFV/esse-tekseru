@@ -99,9 +99,9 @@ def create_app(settings: Settings | None = None, analyzer=None, database=None) -
     async def analyze(body: EssayInput):
         db = await run_in_threadpool(ensure_db)
         markers = detect_markers(body.essay_text)
-        result = await app.state.analyzer.analyze(body.title, body.essay_text, markers)
+        result, topic = await app.state.analyzer.assess(body.title, body.essay_text, markers)
         scores = {name: getattr(result.criteria, name).score for name in MAX_SCORES}
-        saved = {"analysis": result.model_dump(), "total_score": sum(scores.values()),
+        saved = {"analysis": result.model_dump(), "topic_alignment": topic.model_dump(), "total_score": sum(scores.values()),
                  "max_scores": MAX_SCORES, "markers": markers, "model": settings.gemini_model}
 
         def persist():
