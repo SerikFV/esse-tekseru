@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Қазақ тіліндегі эссенің құрылымы мен аргументациясын AI көмегімен талдау">
+  <title>Эссе Тексеру — ойыңызды өрбітіңіз</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/script.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="/">Э<span>✳</span> Эссе Тексеру</a><span class="tag">ҚАЗАҚ ТІЛІНДЕГІ AI КӨМЕКШІ</span></header>
+  <main>
+    <section class="intro"><p class="eyebrow">ЖАЗУ. ОЙЛАНУ. ЖЕТІЛДІРУ.</p><h1>Ойыңыз анық.<br><span>Дәлеліңіз мықты болсын.</span></h1><p>Эссеңіздің құрылымын, аргументтерін және тілдік сапасын талдап,<br class="desktop"> келесі нұсқаңызды жақсартуға нақты бағыт алыңыз.</p></section>
+    <div class="workspace">
+      <section class="panel editor" aria-labelledby="editor-title">
+        <div class="panel-heading"><h2 id="editor-title">Сіздің эссеңіз</h2><button class="text-button" id="reset" type="button">Жаңасын жазу ↗</button></div>
+        <form id="essay-form">
+          <label for="title">Эссе тақырыбы</label><input id="title" name="title" placeholder="Мысалы, Жасанды интеллекттің білім берудегі рөлі" maxlength="250" required>
+          <div class="field-heading"><label for="essay">Эссе мәтіні</label><label class="upload-label" for="image">↥ Суреттен мәтін тану</label><input id="image" type="file" accept="image/png,image/jpeg,image/webp" hidden></div>
+          <textarea id="essay" name="essay_text" maxlength="30000" required placeholder="Ойыңызды осында жазыңыз немесе дайын эссеңізді көшіріп қойыңыз…"></textarea>
+          <div class="editor-footer"><span id="word-count">0 сөз</span><span>30 000 таңбаға дейін</span></div>
+          <p class="privacy">Талдау үшін тақырып пен мәтін Google Gemini сервисіне жіберіледі және нәтиже осы сервердің тарихында сақталады. Құпия деректер енгізбеңіз.</p>
+          <label class="consent"><input id="consent" type="checkbox" required> Мәтінді Gemini арқылы талдауға және осы серверде сақтауға келісемін.</label>
+          <button class="primary" id="analyze" type="submit"><span id="button-text">Эссені талдау</span><span aria-hidden="true">↗</span></button>
+        </form>
+        <p id="status" role="status" aria-live="polite"></p><p id="error" role="alert" hidden></p>
+      </section>
+      <aside>
+        <section class="panel rubric"><p class="eyebrow">БАҒАЛАУ ӨЛШЕМДЕРІ</p><h2>Әр ойдың өз салмағы бар</h2><p>5 критерий · 100 балл</p><ul><li><span>01 &nbsp; Құрылым</span><strong>25</strong></li><li><span>02 &nbsp; Аргументация</span><strong>30</strong></li><li><span>03 &nbsp; Логика</span><strong>20</strong></li><li><span>04 &nbsp; Дәлелдер</span><strong>15</strong></li><li><span>05 &nbsp; Тілдік сапа</span><strong>10</strong></li></ul><div class="note">✳ &nbsp;Тек балл емес.<br>Мәтініңізден нақты үзінділер мен қолдануға болатын ұсыныстар.</div></section>
+        <section class="panel history"><div class="panel-heading"><h2>Талдау тарихы</h2><button id="refresh" class="text-button" type="button" aria-label="Тарихты жаңарту">↻</button></div><p class="muted">Осы серверде сақталған соңғы талдаулар. Барлық келушіге ортақ.</p><div id="history-list"></div><button id="more" class="text-button" type="button" hidden>Тағы көрсету ↓</button></section>
+      </aside>
+    </div>
+    <section id="results" hidden aria-labelledby="results-title"><div class="result-heading"><div><p class="eyebrow">ТАЛДАУ НӘТИЖЕСІ</p><h2 id="results-title"></h2><p id="summary"></p></div><div class="total"><strong id="total-score"></strong><span>/ 100 балл</span></div></div><p class="muted">AI бағасы — көмекші пікір. Соңғы академиялық бағалауды оқытушы жүргізеді. Сыртқы деректердің дұрыстығы тексерілмейді.</p><div id="classification" class="panel"></div><div id="criteria" class="criteria-grid"></div><div class="detail-grid"><section class="panel"><h3>Құрылымдық карта</h3><div id="structure-map"></div></section><section class="panel"><h3>Келесі қадамдар</h3><div id="suggestions"></div><h3>Тілдік түзетулер</h3><div id="corrections"></div></section></div><details class="panel"><summary>Мәтіндегі көмекші маркерлер</summary><p class="muted">Маркер саны баллды анықтамайды.</p><div id="markers"></div></details></section>
+  </main>
+  <footer><span>Эссе Тексеру</span><span>Қазақша ойлаңыз. Сенімді жазыңыз.</span></footer>
+</body></html>
