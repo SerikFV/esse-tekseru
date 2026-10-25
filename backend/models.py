@@ -17,6 +17,7 @@ class Essay(Base):
     word_count: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     analysis: Mapped["EssayAnalysis"] = relationship(back_populates="essay", cascade="all, delete-orphan", uselist=False)
+    work: Mapped["EssayWork | None"] = relationship(cascade="all, delete-orphan", uselist=False, foreign_keys="EssayWork.essay_id")
 
 
 class EssayAnalysis(Base):
@@ -34,3 +35,13 @@ class EssayAnalysis(Base):
     analysis_result: Mapped[dict] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     essay: Mapped[Essay] = relationship(back_populates="analysis")
+
+
+class EssayWork(Base):
+    """Additive table: old essays/analyses and their schema remain intact."""
+    __tablename__ = "essay_workflows"
+    essay_id: Mapped[int] = mapped_column(ForeignKey("essays.id", ondelete="CASCADE"), primary_key=True)
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("essays.id", ondelete="SET NULL"), nullable=True, index=True)
+    request_id: Mapped[str | None] = mapped_column(String(36), unique=True, nullable=True)
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    state: Mapped[dict] = mapped_column(JSONB)

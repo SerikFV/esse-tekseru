@@ -24,7 +24,7 @@ def analysis_json():
             "classification": {"style": "Публицистикалық", "essay_type": "Аргументативті", "explanation": "Автор пікірі бар.", "quotes": ["Менің ойымша"]},
             "criteria": {name: copy.deepcopy(criterion) for name in MAX_SCORES},
             "structure_map": {"introduction": [], "thesis": ["білім маңызды"], "arguments": [], "evidence": [], "counterargument": [], "conclusion": ["Демек, оқу қажет."]},
-            "language_corrections": []}
+            "language_corrections": [], "text_feedback": []}
 
 
 @pytest.mark.parametrize("name,limit", MAX_SCORES.items())
@@ -81,7 +81,10 @@ def test_real_http_contract(analysis_json):
 
 
 @pytest.mark.parametrize("status,expected", [(401,503),(403,503),(429,429),(500,502),(404,502)])
-def test_provider_errors(status, expected):
+def test_provider_errors(status, expected, monkeypatch):
+    async def no_delay(seconds):
+        pass
+    monkeypatch.setattr(asyncio, "sleep", no_delay)
     with pytest.raises(AIError) as raised:
         asyncio.run(analyzer(lambda request: httpx.Response(status, text="private provider error")).analyze("Тақырып", ESSAY, []))
     assert raised.value.status == expected
@@ -160,3 +163,18 @@ def test_temporary_provider_outage_is_retried_once(analysis_json):
     result = asyncio.run(analyzer(handler).analyze("Тақырып", ESSAY, []))
     validate_quotes(result, ESSAY)
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize("status", [503, 500, 502, 504])
+def test_overload_retries_are_bounded_with_backoff(monkeypatch, status):
+    delays, requests = [], []
+    async def sleep(seconds):
+        delays.append(seconds)
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    def handler(request):
+        requests.append(request)
+        return httpx.Response(status)
+    with pytest.raises(AIError) as error:
+        asyncio.run(analyzer(handler).analyze("Тақырып", ESSAY, []))
+    assert error.value.status == (503 if status == 503 else 504 if status == 504 else 502)
+    assert len(requests) == 3 and delays == [2, 4]

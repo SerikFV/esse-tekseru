@@ -50,9 +50,11 @@ def test_ui_and_missing_database():
 @pytest.mark.parametrize("topic_status", ["matched", "partial", "mismatched"])
 def test_full_postgres_roundtrip(database, analysis_json, topic_status):
     class FixtureAnalyzer:
-        async def assess(self, title, essay, markers):
+        async def analyze(self, title, essay, markers):
             assert essay == ESSAY
-            return AIAnalysis.model_validate(analysis_json), TopicAlignment(
+            return AIAnalysis.model_validate(analysis_json)
+        async def compare_topic(self, title, essay):
+            return TopicAlignment(
                 status=topic_status, explanation="Тақырып туралы тест түсіндірмесі.",
                 quotes=["білім маңызды"], suggested_title=None if topic_status == "matched" else "Білімнің пайдасы")
 
@@ -76,13 +78,21 @@ def test_full_postgres_roundtrip(database, analysis_json, topic_status):
             assert session.execute(text("SELECT count(*) FROM essay_analyses")).scalar() == 0
 
 
-def test_provider_failure_saves_nothing(database):
+def test_provider_failure_preserves_text_without_fake_score(database):
     class FailingAnalyzer:
-        async def assess(self, *args):
+        async def analyze(self, *args):
+            raise AIError("Gemini сұрау лимиті аяқталды.", 429)
+        async def compare_topic(self, *args):
             raise AIError("Gemini сұрау лимиті аяқталды.", 429)
     with TestClient(create_app(Settings(_env_file=None), analyzer=FailingAnalyzer(), database=database)) as client:
-        assert client.post("/api/essays/analyze", json={"title": "Сынақ", "essay_text": ESSAY}).status_code == 429
-        assert client.get("/api/essays").json() == []
+        response = client.post("/api/essays/analyze", json={"title": "Сынақ", "essay_text": ESSAY})
+        assert response.status_code == 201
+        result = response.json()
+        assert result["status"] == "failed"
+        assert result["analysis"] is None and result["total_score"] is None
+        assert result["essay_text"] == ESSAY
+        assert len(client.get("/api/essays").json()) == 1
+        assert client.post(f"/api/essays/{result['id']}/retry/grade").status_code == 429
 
 
 def test_database_connection_failure_does_not_call_ai():

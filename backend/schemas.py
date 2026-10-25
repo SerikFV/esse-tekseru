@@ -1,4 +1,5 @@
 import re
+from uuid import UUID
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
@@ -15,6 +16,8 @@ class EssayInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: str = Field(default="Тақырыпсыз эссе", max_length=250)
     essay_text: str = Field(min_length=1, max_length=30000)
+    parent_id: int | None = Field(default=None, gt=0)
+    request_id: UUID | None = None
 
     @field_validator("essay_text", "title")
     @classmethod
@@ -87,6 +90,13 @@ class Correction(StrictModel):
     explanation: Text
 
 
+class TextFeedback(StrictModel):
+    category: Literal["structure", "argumentation", "logic", "evidence", "language"]
+    quote: Quote
+    explanation: Text
+    suggestion: Text
+
+
 class TopicAlignment(StrictModel):
     status: Literal["matched", "partial", "mismatched", "undetermined"]
     explanation: Text
@@ -105,6 +115,14 @@ class TopicAlignment(StrictModel):
         return self
 
 
+class TopicSelection(StrictModel):
+    """Internal AI format: the server resolves evidence IDs to exact source text."""
+    status: Literal["matched", "partial", "mismatched", "undetermined"]
+    explanation: Text
+    evidence_ids: list[int] = Field(min_length=1, max_length=4)
+    suggested_title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=250)] | None
+
+
 class AIAnalysis(StrictModel):
     summary: Text
     strengths: list[Text] = Field(max_length=8)
@@ -114,6 +132,7 @@ class AIAnalysis(StrictModel):
     criteria: Scores
     structure_map: StructureMap
     language_corrections: list[Correction] = Field(max_length=12)
+    text_feedback: list[TextFeedback] = Field(max_length=20)
 
 
 MAX_SCORES = {"structure": 25, "argumentation": 30, "logic": 20, "evidence": 15, "language": 10}
@@ -127,6 +146,7 @@ def validate_quotes(analysis: AIAnalysis, essay: str) -> None:
     for entries in analysis.structure_map.model_dump().values():
         quotes.extend(entries)
     quotes.extend(item.original for item in analysis.language_corrections)
+    quotes.extend(item.quote for item in analysis.text_feedback)
     validate_source_quotes(quotes, essay)
 
 

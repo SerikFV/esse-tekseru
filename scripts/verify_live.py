@@ -49,6 +49,9 @@ def main():
             result = response.json()
             essay_id = result["id"]
             try:
+                if result.get("status") != "ready":
+                    print("INCOMPLETE: essay saved; section errors:", {key: value.get("error", value["status"]) for key, value in result["sections"].items()})
+                    return 1
                 assert client.get(f"/api/essays/{essay_id}").json() == result
                 assert result["total_score"] == sum(c["score"] for c in result["analysis"]["criteria"].values())
                 alignment = result["topic_alignment"]

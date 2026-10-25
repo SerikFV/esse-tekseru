@@ -1,0 +1,2 @@
+# Optional E2E tooling; the application does not depend on this package.
+playwright==1.62.0
