@@ -59,7 +59,7 @@ def read_snapshot(db, essay_id: int) -> dict:
         return snapshot(essay)
 
 
-def finish_section(db, essay_id: int, name: str, attempt: str, *, result=None, error=None):
+def finish_section(db, essay_id: int, name: str, attempt: str, *, result=None, error=None, model=None):
     with db.session.begin() as session:
         work = session.scalar(select(EssayWork).where(EssayWork.essay_id == essay_id).with_for_update())
         if not work:
@@ -70,13 +70,17 @@ def finish_section(db, essay_id: int, name: str, attempt: str, *, result=None, e
             return  # An expired/older worker cannot overwrite a newer retry.
         if error:
             state["sections"][name] = {**section, "status": "failed", "error": error.message,
+                "model": model,
+                "provider_status": error.provider_status, "error_code": error.error_code,
                 "retry_at": time.time() + (60 if error.status == 429 else 0)}
         else:
-            state["sections"][name] = {**section, "status": "ready"}
+            state["sections"][name] = {**section, "status": "ready", "model": model}
             if name == "topic":
                 state["topic_alignment"] = result.model_dump()
             else:
                 analysis = result.model_dump()
+                if model:
+                    state["model"] = model
                 scores = {key: value["score"] for key, value in analysis["criteria"].items()}
                 state.update(analysis=analysis, total_score=sum(scores.values()),
                              annotations=annotations_for(session.get(Essay, essay_id).essay_text, analysis))

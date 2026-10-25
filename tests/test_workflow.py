@@ -89,6 +89,37 @@ def test_progress_is_saved_before_other_section_completes(database, analysis_jso
         assert wait_for(client, essay_id)["status"] == "ready"
 
 
+def test_provider_error_metadata_is_saved_without_provider_secrets(database, analysis_json):
+    class RejectedService(Service):
+        async def analyze(self, *args):
+            raise AIError("Сұрау пішімі қабылданбады.", provider_status=400, error_code="invalid_request")
+    service = RejectedService(analysis_json)
+    with TestClient(create_app(Settings(_env_file=None), service, database)) as client:
+        result = client.post("/api/essays/analyze", json={"title": "Білім", "essay_text": ESSAY}).json()
+        assert result["status"] == "partial" and result["topic_alignment"]
+        grade = client.get(f"/api/essays/{result['id']}").json()["sections"]["grade"]
+        assert grade["provider_status"] == 400 and grade["error_code"] == "invalid_request"
+
+
+def test_retry_records_actual_new_model_without_relabeling_cached_topic(database, analysis_json):
+    service = Service(analysis_json); service.fail_grade = True
+    with TestClient(create_app(Settings(_env_file=None, gemini_model="gemini-3.1-flash-lite"), service, database)) as client:
+        first = client.post("/api/essays/analyze", json={"title": "Білім", "essay_text": ESSAY}).json()
+    service.fail_grade = False
+    with TestClient(create_app(Settings(_env_file=None, gemini_model="gemini-3.5-flash-lite"), service, database)) as client:
+        result = client.post(f"/api/essays/{first['id']}/retry/grade").json()
+        assert result["model"] == result["sections"]["grade"]["model"] == "gemini-3.5-flash-lite"
+        assert result["sections"]["topic"]["model"] == "gemini-3.1-flash-lite"
+        assert result["topic_alignment"] == first["topic_alignment"]
+        assert service.grade_calls == 2 and service.topic_calls == 1
+
+
+def test_comparison_exposes_different_grading_models(analysis_json):
+    base = {"title": "Білім", "essay_text": ESSAY, "analysis": analysis_json, "total_score": 25, "annotations": []}
+    result = version_comparison({**base, "id": 1, "model": "old-model"}, {**base, "id": 2, "model": "new-model"})
+    assert result["model_changed"] and result["before_model"] == "old-model" and result["after_model"] == "new-model"
+
+
 def test_idempotent_submit_and_conflicting_payload(database, analysis_json):
     service = Service(analysis_json)
     request_id = str(uuid4())

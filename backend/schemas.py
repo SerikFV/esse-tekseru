@@ -138,6 +138,12 @@ class AIAnalysis(StrictModel):
 MAX_SCORES = {"structure": 25, "argumentation": 30, "logic": 20, "evidence": 15, "language": 10}
 
 
+class SourceQuoteError(ValueError):
+    def __init__(self, quotes: list[str]):
+        self.invalid_quotes = quotes
+        super().__init__("AI returned a quotation absent from the essay")
+
+
 def validate_quotes(analysis: AIAnalysis, essay: str) -> None:
     """Reject invented quotations; whitespace normalization allows paragraph wrapping."""
     quotes = list(analysis.classification.quotes)
@@ -153,5 +159,6 @@ def validate_quotes(analysis: AIAnalysis, essay: str) -> None:
 def validate_source_quotes(quotes: list[str], essay: str) -> None:
     normalize = lambda text: " ".join(text.split())
     source = normalize(essay)
-    if any(normalize(quote) not in source for quote in quotes):
-        raise ValueError("AI returned a quotation absent from the essay")
+    invalid = [quote for quote in quotes if normalize(quote) not in source]
+    if invalid:
+        raise SourceQuoteError(list(dict.fromkeys(invalid)))

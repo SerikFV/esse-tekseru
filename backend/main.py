@@ -105,7 +105,8 @@ def create_app(settings: Settings | None = None, analyzer=None, database=None) -
         except Exception as exc:
             logger.error("Analysis section failed (%s)", type(exc).__name__)
             error = AIError("Бұл бөлімді тексеру орындалмады. Дайын бөлімдер сақталды.")
-        await run_in_threadpool(finish_section, db, essay_id, name, section["attempt"], result=result, error=error)
+        await run_in_threadpool(finish_section, db, essay_id, name, section["attempt"], result=result, error=error,
+                                model=settings.gemini_model)
         if cancelled:
             raise asyncio.CancelledError
 

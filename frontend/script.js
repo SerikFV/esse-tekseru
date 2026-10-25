@@ -458,6 +458,15 @@ async function loadComparison(data) {
 function renderComparison(data) {
   const root = $("comparison-content");
   root.replaceChildren(node("p", data.notice, "muted"));
+  if (data.model_changed) {
+    root.append(
+      node(
+        "p",
+        `Нұсқалар әртүрлі модельдермен бағаланған: ${data.before_model} → ${data.after_model}. Балл айырмасын тек мәтіннің жақсаруымен түсіндіруге болмайды.`,
+        "muted",
+      ),
+    );
+  }
   if (data.total_delta !== null)
     root.append(
       node(

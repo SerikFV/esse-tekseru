@@ -50,6 +50,8 @@ def version_comparison(before: dict, after: dict) -> dict:
         if c < d:
             new_parts.append({"kind": "same" if tag == "equal" else "added", "text": "".join(new_tokens[c:d])})
     old_analysis, new_analysis = before.get("analysis"), after.get("analysis")
+    before_model = before.get("sections", {}).get("grade", {}).get("model") or before.get("model")
+    after_model = after.get("sections", {}).get("grade", {}).get("model") or after.get("model")
     score_changes = []
     if old_analysis and new_analysis:
         for key, maximum in MAX_SCORES.items():
@@ -73,4 +75,6 @@ def version_comparison(before: dict, after: dict) -> dict:
             "evidence_changes": {"before": (old_analysis or {}).get("structure_map", {}).get("evidence", []),
                                 "after": (new_analysis or {}).get("structure_map", {}).get("evidence", [])},
             "text_changed": before["essay_text"] != after["essay_text"],
+            "before_model": before_model, "after_model": after_model,
+            "model_changed": bool(old_analysis and new_analysis and before_model and after_model and before_model != after_model),
             "notice": "Балл айырмасы — AI бағасының өзгерісі. Өзгертілген үзінді қатенің міндетті түрде түзелгенін білдірмейді; жаңа түсініктемелерді салыстырыңыз."}
