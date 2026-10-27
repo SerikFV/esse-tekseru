@@ -1,4 +1,4 @@
-# Эссе Тексеру
+# tekSER
 
 Қазақ тіліндегі эссені **нақты Google Gemini API** арқылы талдайтын веб-қосымша.
 FastAPI + Python 3.12, HTML/CSS/JavaScript, PostgreSQL 17, SQLAlchemy және Uvicorn.

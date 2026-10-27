@@ -7,14 +7,34 @@
       name="description"
       content="Қазақ тіліндегі эссенің құрылымы мен аргументациясын AI көмегімен талдау"
     />
-    <title>Эссе Тексеру — ойыңызды өрбітіңіз</title>
+    <meta name="application-name" content="tekSER" />
+    <title>tekSER — қазақ тіліндегі эссені талдау</title>
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="64x64"
+      href="/static/assets/tekser-favicon.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/static/assets/tekser-apple-touch.png"
+    />
     <link rel="stylesheet" href="/static/style.css" />
     <script src="/static/script.js" defer></script>
   </head>
   <body>
     <header>
-      <a class="brand" href="/">Э<span>✳</span> Эссе Тексеру</a
-      ><span class="tag">ҚАЗАҚ ТІЛІНДЕГІ AI КӨМЕКШІ</span>
+      <a class="brand" href="/" aria-label="tekSER — басты бет">
+        <img
+          src="/static/assets/tekser-icon.webp"
+          width="48"
+          height="48"
+          alt=""
+        />
+        <span class="brand-wordmark">tek<strong>SER</strong></span>
+      </a>
+      <span class="tag">ҚАЗАҚ ТІЛІНДЕГІ AI КӨМЕКШІ</span>
     </header>
     <main>
       <section class="intro">
@@ -206,7 +226,17 @@
       </section>
     </main>
     <footer>
-      <span>Эссе Тексеру</span><span>Қазақша ойлаңыз. Сенімді жазыңыз.</span>
+      <a class="brand footer-brand" href="/" aria-label="tekSER — басты бет">
+        <img
+          src="/static/assets/tekser-icon.webp"
+          width="32"
+          height="32"
+          alt=""
+          loading="lazy"
+        />
+        <span class="brand-wordmark">tek<strong>SER</strong></span>
+      </a>
+      <span>Қазақша ойлаңыз. Сенімді жазыңыз.</span>
     </footer>
   </body>
 </html>

@@ -51,7 +51,7 @@ def create_app(settings: Settings | None = None, analyzer=None, database=None) -
         if app.state.database:
             app.state.database.engine.dispose()
 
-    app = FastAPI(title="Эссе Тексеру API", lifespan=lifespan)
+    app = FastAPI(title="tekSER API", lifespan=lifespan)
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):

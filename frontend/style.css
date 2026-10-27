@@ -29,14 +29,35 @@ header {
   padding: 0 24px;
 }
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
   text-decoration: none;
-  color: inherit;
-  font-size: 19px;
+  color: #d61925;
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.brand img {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 22%;
+}
+.brand-wordmark {
+  font-weight: 500;
+}
+.brand-wordmark strong {
   font-weight: 800;
 }
-.brand span {
-  color: #92ae47;
-  margin-right: 12px;
+.brand:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 5px;
+  border-radius: 4px;
+}
+.footer-brand {
+  gap: 9px;
+  font-size: 23px;
 }
 .tag,
 .eyebrow {
@@ -386,6 +407,7 @@ summary {
 }
 footer {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   padding: 25px 24px;
   border-top: 1px solid var(--line);
