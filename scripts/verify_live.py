@@ -1,6 +1,7 @@
 """Run against the REAL Gemini service and PostgreSQL; never substitutes fixtures."""
 import argparse
 import sys
+from getpass import getpass
 
 from fastapi.testclient import TestClient
 
@@ -26,6 +27,7 @@ CASES["тақырып ішінара сәйкес"] = ("Кітап оқу жән
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--username", help="Existing verified login or email; password is requested privately")
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument("--suite", action="store_true", help="Send all cases (uses API quota)")
     selection.add_argument("--case", choices=list(CASES), help="Run one named case")
@@ -34,9 +36,14 @@ def main():
     if not settings.gemini_api_key.get_secret_value():
         print("BLOCKED: GEMINI_API_KEY is missing. No live AI verification performed.")
         return 2
-    with TestClient(create_app(settings)) as client:
+    with TestClient(create_app(settings), headers={"X-Requested-With": "tekSER"}) as client:
         if client.get("/api/health").status_code != 200:
             print("BLOCKED: database is not ready.")
+            return 2
+        identifier = args.username or input("Расталған аккаунттың логині/email: ")
+        login = client.post("/api/auth/login", json={"identifier": identifier, "password": getpass("tekSER құпиясөзі: ")})
+        if login.status_code != 200:
+            print("BLOCKED: verified account login failed. No Gemini requests sent.")
             return 2
         case = args.case or "қалыпты"
         selected = CASES if args.suite else {case: CASES[case]}

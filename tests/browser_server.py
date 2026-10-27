@@ -18,6 +18,9 @@ from backend.database import Database
 from backend.main import create_app
 from backend.schemas import AIAnalysis, TopicAlignment
 from test_analysis import analysis_json
+from test_accounts import Mailbox
+from backend.auth_models import AuthLimit, now
+from sqlalchemy import update
 
 
 class FixtureService:
@@ -63,7 +66,19 @@ if __name__ == "__main__":
     db.engine = create_engine(url, connect_args={"options": f"-csearch_path={schema}"})
     db.session = sessionmaker(db.engine, expire_on_commit=False)
     service = FixtureService()
-    app = create_app(Settings(_env_file=None, gemini_api_key=""), service, db)
+    mailbox = Mailbox()
+    app = create_app(Settings(_env_file=None, gemini_api_key="", bootstrap_admin_email="owner@example.com"), service, db, mailbox)
+
+    @app.get("/__test__/mail")
+    def last_mail():
+        return mailbox.sent[-1] if mailbox.sent else {}
+
+    @app.post("/__test__/allow-mail")
+    def allow_mail():
+        from datetime import timedelta
+        with db.session.begin() as session:
+            session.execute(update(AuthLimit).values(reset_at=now() - timedelta(seconds=1)))
+        return {"ok": True}
 
     @app.get("/__test__/counts")
     def counts():

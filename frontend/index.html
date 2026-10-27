@@ -20,8 +20,10 @@
       sizes="180x180"
       href="/static/assets/tekser-apple-touch.png"
     />
-    <link rel="stylesheet" href="/static/style.css?v=editorial-1" />
-    <script src="/static/script.js?v=editorial-1" defer></script>
+    <link rel="stylesheet" href="/static/style.css?v=accounts-1" />
+    <link rel="stylesheet" href="/static/account.css?v=accounts-1" />
+    <script src="/static/account.js?v=accounts-1" defer></script>
+    <script src="/static/script.js?v=accounts-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#title">Мәтінге өту</a>
@@ -40,7 +42,7 @@
         <a href="#history">Тарих</a>
         <a href="#rubric">Өлшемдер</a>
       </nav>
-      <span class="tag">ҚАЗАҚ ТІЛІНДЕГІ<br />AI КӨМЕКШІ</span>
+      <div class="account-nav" id="account-nav"></div>
     </header>
     <main>
       <section class="intro">
@@ -118,7 +120,7 @@
             </div>
             <p class="privacy">
               Талдау үшін тақырып пен мәтін Google Gemini сервисіне жіберіледі
-              және нәтиже осы сервердің тарихында сақталады. Құпия деректер
+              және нәтиже жеке кабинетіңізде сақталады. Құпия деректер
               енгізбеңіз.
             </p>
             <label class="consent"
@@ -230,7 +232,8 @@
               </button>
             </div>
             <p class="muted">
-              Осы серверде сақталған соңғы талдаулар. Барлық келушіге ортақ.
+              Сіздің аккаунтыңызда сақталған соңғы талдаулар. Оларды тек өзіңіз
+              көресіз.
             </p>
             <div id="history-list"></div>
             <button id="more" class="text-button" type="button" hidden>

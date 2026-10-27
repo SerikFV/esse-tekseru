@@ -3,6 +3,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker
 
 from .models import Base
+from . import auth_models  # noqa: F401 — register additive account tables
 
 
 class Database:
@@ -13,7 +14,10 @@ class Database:
         self.session = sessionmaker(self.engine, expire_on_commit=False)
 
     def initialize(self):
-        Base.metadata.create_all(self.engine)
+        with self.engine.begin() as connection:
+            # Serialize startup DDL across workers without altering existing tables.
+            connection.execute(text("SELECT pg_advisory_xact_lock(72639581)"))
+            Base.metadata.create_all(connection)
 
     def ping(self):
         with self.engine.connect() as connection:

@@ -6,7 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
+from account_helpers import client_for as TestClient
+from backend.auth_models import EssayOwner
 from sqlalchemy import select
 
 from backend.ai_analyzer import AIError
@@ -232,6 +233,8 @@ def test_legacy_analysis_can_fill_missing_topic_without_regrading(database, anal
         old_id = old.id
     service = Service(analysis_json)
     with TestClient(create_app(Settings(_env_file=None), service, database)) as client:
+        with database.session.begin() as session:
+            session.add(EssayOwner(essay_id=old_id, user_id=client.test_user_id))
         legacy = client.get(f"/api/essays/{old_id}").json()
         assert legacy["sections"]["topic"]["status"] == "not_run"
         assert client.post(f"/api/essays/{old_id}/retry/topic").json()["topic_alignment"]

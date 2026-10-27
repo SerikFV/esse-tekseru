@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="kk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Жеке кабинет — tekSER</title>
+    <link
+      rel="icon"
+      href="/static/assets/tekser-favicon.png"
+      type="image/png"
+    />
+    <link rel="stylesheet" href="/static/style.css?v=accounts-1" />
+    <link rel="stylesheet" href="/static/account.css?v=accounts-1" />
+    <script src="/static/account.js?v=accounts-1" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#account-main">Мазмұнға өту</a>
+    <header>
+      <a class="brand" href="/" aria-label="tekSER — басты бет"
+        ><img
+          src="/static/assets/tekser-icon.webp"
+          width="40"
+          height="40"
+          alt=""
+        /><span class="brand-wordmark">tek<strong>SER</strong></span></a
+      >
+      <nav class="main-nav" aria-label="Негізгі мәзір">
+        <a href="/#workspace">Жазу</a><a href="/#history">Менің эсселерім</a>
+      </nav>
+      <div class="account-nav" id="account-nav"></div>
+    </header>
+    <main id="account-main" tabindex="-1">
+      <p id="account-loading" class="muted">Жүктелуде…</p>
+      <p id="account-message" role="status" aria-live="polite" hidden></p>
+      <section id="auth-view" hidden aria-label="Кіру және тіркелу">
+        <div class="auth-shell" id="auth-shell">
+          <div class="auth-stage">
+            <form id="login-form" class="auth-form">
+              <p class="eyebrow">ҚАЙТА ОРАЛҒАНЫҢЫЗҒА ҚУАНЫШТЫМЫЗ</p>
+              <h1>Ойыңызды жалғастырыңыз.</h1>
+              <p class="auth-description">
+                Эсселеріңіз бен сақталған талдауларыңыз бір жерде.
+              </p>
+              <label for="login-identifier">Логин немесе email</label>
+              <input
+                id="login-identifier"
+                name="identifier"
+                autocomplete="username"
+                required
+                maxlength="254"
+              />
+              <label for="login-password">Құпиясөз</label>
+              <div class="password-field">
+                <input
+                  id="login-password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                /><button
+                  type="button"
+                  class="eye-button"
+                  data-password="login-password"
+                  aria-label="Құпиясөзді көрсету"
+                  aria-pressed="false"
+                ></button>
+              </div>
+              <button
+                type="button"
+                class="text-button forgot-button"
+                data-mode="forgot"
+              >
+                Құпиясөзді ұмыттым
+              </button>
+              <button class="primary" type="submit">Кіру</button>
+              <p class="auth-mobile-switch">
+                Аккаунтыңыз жоқ па?
+                <button class="text-button" type="button" data-mode="register">
+                  Тіркелу
+                </button>
+              </p>
+            </form>
+            <form id="register-form" class="auth-form" hidden>
+              <p class="eyebrow">АЛҒАШҚЫ ҚАДАМ — ЖАҢА МҮМКІНДІК</p>
+              <h1>Ойыңызға орын бар.</h1>
+              <p class="auth-description">
+                Жеке кеңістігіңізді ашып, жазу дағдыңызды жетілдіріңіз.
+              </p>
+              <label for="register-username">Логин</label>
+              <input
+                id="register-username"
+                name="username"
+                autocomplete="username"
+                required
+                minlength="3"
+                maxlength="30"
+                pattern="[A-Za-z0-9_]{3,30}"
+                aria-describedby="register-username-help"
+              />
+              <small id="register-username-help" class="field-help"
+                >3–30 латын әрпі, сан немесе _ белгісі.</small
+              >
+              <label for="register-email">Email</label>
+              <input
+                id="register-email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                required
+                maxlength="254"
+                aria-describedby="register-email-help"
+              />
+              <small id="register-email-help" class="field-help"
+                >Растау коды осы поштаға жіберіледі.</small
+              >
+              <label for="register-password">Құпиясөз</label>
+              <div class="password-field">
+                <input
+                  id="register-password"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  required
+                  minlength="4"
+                  aria-describedby="register-password-help"
+                /><button
+                  type="button"
+                  class="eye-button"
+                  data-password="register-password"
+                  aria-label="Құпиясөзді көрсету"
+                  aria-pressed="false"
+                ></button>
+              </div>
+              <small id="register-password-help" class="field-help"
+                >Кемінде 4 таңба.</small
+              >
+              <label for="register-confirmation">Құпиясөзді қайталау</label>
+              <div class="password-field">
+                <input
+                  id="register-confirmation"
+                  name="password_confirmation"
+                  type="password"
+                  autocomplete="new-password"
+                  required
+                  minlength="4"
+                  aria-describedby="register-confirmation-help"
+                /><button
+                  type="button"
+                  class="eye-button"
+                  data-password="register-confirmation"
+                  aria-label="Құпиясөзді көрсету"
+                  aria-pressed="false"
+                ></button>
+              </div>
+              <small id="register-confirmation-help" class="field-help"></small>
+              <button
+                type="button"
+                class="text-button forgot-button"
+                data-mode="forgot"
+              >
+                Құпиясөзді ұмыттым
+              </button>
+              <button class="primary" type="submit">Растау кодын жіберу</button>
+              <p class="auth-mobile-switch">
+                Аккаунтыңыз бар ма?
+                <button class="text-button" type="button" data-mode="login">
+                  Кіру
+                </button>
+              </p>
+            </form>
+            <form id="forgot-form" class="auth-form" hidden>
+              <p class="eyebrow">ҚОЛЖЕТІМДІЛІКТІ ҚАЛПЫНА КЕЛТІРУ</p>
+              <h1>Жаңа құпиясөз.</h1>
+              <p class="auth-description">
+                Аккаунтыңыздың email мекенжайын немесе логинін енгізіңіз.
+              </p>
+              <label for="forgot-identifier">Логин немесе email</label>
+              <input
+                id="forgot-identifier"
+                name="identifier"
+                autocomplete="username"
+                required
+                maxlength="254"
+              />
+              <button class="primary" type="submit">Код жіберу</button>
+              <button class="text-button" type="button" data-mode="login">
+                Кіруге оралу
+              </button>
+            </form>
+            <form id="code-form" class="auth-form" hidden>
+              <p class="eyebrow">ПОШТАНЫ РАСТАУ</p>
+              <h1>Бір қадам қалды.</h1>
+              <p class="auth-description" id="code-description"></p>
+              <label for="verification-code">Алты таңбалы код</label>
+              <input
+                id="verification-code"
+                name="code"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                pattern="[0-9]{6}"
+                minlength="6"
+                maxlength="6"
+                required
+              />
+              <p class="muted">
+                Код 10 минут жарамды. Поштадағы «Спам» бумасын да тексеріңіз.
+              </p>
+              <div id="reset-password-fields" hidden>
+                <label for="reset-password">Жаңа құпиясөз</label>
+                <div class="password-field">
+                  <input
+                    id="reset-password"
+                    name="new_password"
+                    type="password"
+                    autocomplete="new-password"
+                    minlength="4"
+                  /><button
+                    type="button"
+                    class="eye-button"
+                    data-password="reset-password"
+                    aria-label="Құпиясөзді көрсету"
+                    aria-pressed="false"
+                  ></button>
+                </div>
+                <label for="reset-confirmation">Құпиясөзді қайталау</label>
+                <div class="password-field">
+                  <input
+                    id="reset-confirmation"
+                    name="password_confirmation"
+                    type="password"
+                    autocomplete="new-password"
+                    minlength="4"
+                  /><button
+                    type="button"
+                    class="eye-button"
+                    data-password="reset-confirmation"
+                    aria-label="Құпиясөзді көрсету"
+                    aria-pressed="false"
+                  ></button>
+                </div>
+              </div>
+              <button class="primary" type="submit">Кодты растау</button>
+              <button id="resend-code" class="text-button" type="button">
+                Кодты қайта жіберу
+              </button>
+              <button id="code-back" class="text-button" type="button">
+                Артқа
+              </button>
+            </form>
+          </div>
+          <aside class="auth-aside">
+            <p class="eyebrow">tekSER · ЖЕКЕ КЕҢІСТІК</p>
+            <h2 id="switch-title">Алғашқы эссеңізден бастаңыз.</h2>
+            <p id="switch-description">
+              Ойыңызды жазыңыз. Нақты кері байланыс алыңыз. Келесі нұсқаңызды
+              жақсартыңыз.
+            </p>
+            <button id="switch-auth" class="secondary" type="button">
+              Тіркелу
+            </button>
+            <span class="auth-aside-caption">ӘР ОЙДЫҢ ӨЗ САЛМАҒЫ БАР.</span>
+          </aside>
+        </div>
+      </section>
+      <section id="profile-view" hidden aria-labelledby="profile-heading">
+        <div class="account-page-heading">
+          <p class="eyebrow">ӨЗІҢІЗГЕ АРНАЛҒАН КЕҢІСТІК</p>
+          <h1 id="profile-heading">Менің профилім</h1>
+          <p class="muted">
+            Деректеріңіз, қауіпсіздік және жазған жұмыстарыңыз.
+          </p>
+        </div>
+        <div class="profile-layout">
+          <aside class="panel profile-card">
+            <div id="profile-avatar" class="profile-avatar"></div>
+            <h2 id="profile-name"></h2>
+            <p id="profile-email"></p>
+            <span class="verified-badge">Пошта расталған</span>
+            <p id="profile-created" class="muted"></p>
+            <a class="secondary" href="/#history">Менің эсселерім</a>
+          </aside>
+          <div class="profile-forms">
+            <section class="panel">
+              <h2>Жеке ақпарат</h2>
+              <form id="profile-form">
+                <label for="profile-username">Логин</label
+                ><input
+                  id="profile-username"
+                  name="username"
+                  required
+                  minlength="3"
+                  maxlength="30"
+                  pattern="[A-Za-z0-9_]{3,30}"
+                /><button class="secondary" type="submit">
+                  Өзгерісті сақтау
+                </button>
+              </form>
+            </section>
+            <section class="panel">
+              <h2>Менің жұмыстарым</h2>
+              <p id="profile-stats"></p>
+              <a class="text-button" href="/#workspace">Жаңа эссе жазу →</a>
+            </section>
+            <section class="panel">
+              <h2>Поштаны өзгерту</h2>
+              <p class="muted">
+                Жаңа email расталғанша қазіргі мекенжайыңыз сақталады.
+              </p>
+              <form id="email-form">
+                <label for="new-email">Жаңа email</label
+                ><input
+                  id="new-email"
+                  name="email"
+                  type="email"
+                  required
+                  maxlength="254"
+                /><label for="email-password">Қазіргі құпиясөз</label>
+                <div class="password-field">
+                  <input
+                    id="email-password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                  /><button
+                    type="button"
+                    class="eye-button"
+                    data-password="email-password"
+                    aria-label="Құпиясөзді көрсету"
+                    aria-pressed="false"
+                  ></button>
+                </div>
+                <button class="secondary" type="submit">
+                  Жаңа поштаға код жіберу
+                </button>
+              </form>
+            </section>
+            <section class="panel" id="security">
+              <h2>Қауіпсіздік</h2>
+              <form id="password-form">
+                <label for="current-password">Қазіргі құпиясөз</label>
+                <div class="password-field">
+                  <input
+                    id="current-password"
+                    name="current_password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                  /><button
+                    type="button"
+                    class="eye-button"
+                    data-password="current-password"
+                    aria-label="Құпиясөзді көрсету"
+                    aria-pressed="false"
+                  ></button>
+                </div>
+                <label for="new-password">Жаңа құпиясөз</label>
+                <div class="password-field">
+                  <input
+                    id="new-password"
+                    name="new_password"
+                    type="password"
+                    autocomplete="new-password"
+                    required
+                    minlength="4"
+                  /><button
+                    type="button"
+                    class="eye-button"
+                    data-password="new-password"
+                    aria-label="Құпиясөзді көрсету"
+                    aria-pressed="false"
+                  ></button>
+                </div>
+                <label for="new-confirmation">Құпиясөзді қайталау</label>
+                <div class="password-field">
+                  <input
+                    id="new-confirmation"
+                    name="password_confirmation"
+                    type="password"
+                    autocomplete="new-password"
+                    required
+                    minlength="4"
+                  /><button
+                    type="button"
+                    class="eye-button"
+                    data-password="new-confirmation"
+                    aria-label="Құпиясөзді көрсету"
+                    aria-pressed="false"
+                  ></button>
+                </div>
+                <button class="secondary" type="submit">
+                  Құпиясөзді өзгерту
+                </button>
+              </form>
+              <button id="logout-all" class="text-button" type="button">
+                Барлық құрылғыдан шығу
+              </button>
+            </section>
+            <details class="panel danger-zone">
+              <summary>Аккаунтты жою</summary>
+              <p class="muted">
+                Аккаунт, барлық эсселер және олардың нұсқалары біржола жойылады.
+                Растау үшін логин мен құпиясөзді енгізіңіз.
+              </p>
+              <form id="delete-form">
+                <label for="delete-username">Логин</label
+                ><input
+                  id="delete-username"
+                  name="username"
+                  required
+                  autocomplete="username"
+                /><label for="delete-password">Құпиясөз</label>
+                <div class="password-field">
+                  <input
+                    id="delete-password"
+                    name="password"
+                    type="password"
+                    required
+                    autocomplete="current-password"
+                  /><button
+                    type="button"
+                    class="eye-button"
+                    data-password="delete-password"
+                    aria-label="Құпиясөзді көрсету"
+                    aria-pressed="false"
+                  ></button>
+                </div>
+                <button class="secondary" type="submit">
+                  Аккаунтты біржола жою
+                </button>
+              </form>
+            </details>
+          </div>
+        </div>
+      </section>
+      <section id="admin-view" hidden aria-labelledby="admin-heading">
+        <div class="account-page-heading">
+          <p class="eyebrow">tekSER · БАСҚАРУ</p>
+          <h1 id="admin-heading">Әкімші панелі</h1>
+        </div>
+        <div class="admin-layout">
+          <nav class="admin-sidebar" aria-label="Әкімші бөлімдері">
+            <button type="button" data-admin="overview">Жалпы шолу</button
+            ><button type="button" data-admin="users">Пайдаланушылар</button
+            ><button type="button" data-admin="pending">Растау сұраулары</button
+            ><button type="button" data-admin="services">
+              Қызметтердің күйі</button
+            ><button type="button" data-admin="audit">Әрекеттер журналы</button>
+          </nav>
+          <div id="admin-content" class="panel" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <a class="brand footer-brand" href="/"
+        ><span class="brand-wordmark">tek<strong>SER</strong></span></a
+      ><span>Қазақша ойлаңыз. Сенімді жазыңыз.</span>
+    </footer>
+  </body>
+</html>

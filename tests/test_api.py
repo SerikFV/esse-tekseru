@@ -2,7 +2,7 @@ import os
 import uuid
 
 import pytest
-from fastapi.testclient import TestClient
+from account_helpers import client_for as TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
@@ -41,10 +41,10 @@ def test_ui_and_missing_database():
         assert client.get("/static/script.js").status_code == 200
         assert client.get("/.env").status_code == 404
         assert client.get("/api/health").status_code == 503
-        assert client.post("/api/essays/analyze", json={"title": "Сынақ", "essay_text": " "}).status_code == 422
+        assert client.post("/api/essays/analyze", json={"title": "Сынақ", "essay_text": " "}).status_code == 503
         assert client.post("/api/essays/analyze", json={"title": "Сынақ", "essay_text": ESSAY}).status_code == 503
         assert client.get("/api/essays").status_code == 503
-        assert client.post("/api/ocr", files={"image": ("bad.png", b"not an image", "image/png")}).status_code == 422
+        assert client.post("/api/ocr", files={"image": ("bad.png", b"not an image", "image/png")}).status_code == 503
 
 
 @pytest.mark.parametrize("topic_status", ["matched", "partial", "mismatched"])
@@ -106,5 +106,5 @@ def test_database_connection_failure_does_not_call_ai():
     db.engine = type("Engine", (), {"dispose": lambda self: None})()
     with TestClient(create_app(Settings(_env_file=None), analyzer=ForbiddenAnalyzer(), database=db)) as client:
         response = client.post("/api/essays/analyze", json={"title": "Сынақ", "essay_text": ESSAY})
-        assert response.status_code == 503
+        assert response.status_code == 401
         assert "private" not in response.text

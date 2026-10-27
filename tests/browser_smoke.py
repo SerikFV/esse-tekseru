@@ -42,6 +42,27 @@ def main():
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.on("dialog", lambda dialog: dialog.accept())
+                page.goto(BASE + "/auth", wait_until="networkidle")
+                page.locator("#switch-auth").click()
+                page.locator("#register-username").fill("browser_user")
+                page.locator("#register-email").fill("browser@example.com")
+                page.locator("#register-password").fill("abcd")
+                page.locator("#register-confirmation").fill("abcd")
+                page.locator('[data-password="register-password"]').click()
+                assert page.locator("#register-password").get_attribute("type") == "text"
+                page.locator('[data-password="register-password"]').click()
+                page.locator("#register-form button[type=submit]").click()
+                page.locator("#verification-code").wait_for(state="visible")
+                code = page.request.get(BASE + "/__test__/mail").json()["code"]
+                page.locator("#verification-code").fill(code)
+                page.locator("#code-form button[type=submit]").click()
+                page.wait_for_url(BASE + "/profile")
+                page.locator("#profile-name").wait_for(state="visible")
+                assert page.locator("#profile-name").inner_text() == "browser_user"
+                page.screenshot(path=str(Path(tempfile.gettempdir()) / "tekser-profile-desktop.png"), full_page=True)
+                page.locator("#profile-toggle").click()
+                assert page.locator('#profile-menu a[href="/admin"]').count() == 0
+                page.keyboard.press("Escape")
                 page.goto(BASE, wait_until="networkidle")
                 page.evaluate("()=>document.fonts.ready")
                 # OCR remains a keyboard-accessible action after the visual redesign.
@@ -120,8 +141,94 @@ def main():
                 page.wait_for_timeout(250)
                 assert page.evaluate("()=>activeResult.id") == second_id
                 assert not errors, errors
+                # Profile changes, verified email replacement and real session invalidation.
+                page.goto(BASE + "/profile", wait_until="networkidle")
+                page.locator("#profile-username").fill("reader_new")
+                page.locator("#profile-form button[type=submit]").click()
+                page.get_by_text("Логин сақталды.", exact=True).wait_for()
+                page.locator("#current-password").fill("abcd")
+                page.locator("#new-password").fill("zzzz")
+                page.locator("#new-confirmation").fill("zzzz")
+                page.locator("#password-form button[type=submit]").click()
+                page.get_by_text("Құпиясөз өзгертілді. Басқа құрылғылардағы сессиялар аяқталды.", exact=True).wait_for()
+                page.locator("#new-email").fill("updated@example.com")
+                page.locator("#email-password").fill("zzzz")
+                page.locator("#email-form button[type=submit]").click()
+                page.locator("#verification-code").wait_for(state="visible")
+                assert page.request.get(BASE + "/api/auth/me").json()["user"]["email"] == "browser@example.com"
+                code = page.request.get(BASE + "/__test__/mail").json()["code"]
+                page.locator("#verification-code").fill(code)
+                page.locator("#code-form button[type=submit]").click()
+                page.get_by_text("Жаңа пошта расталды.", exact=True).wait_for()
+                assert page.locator("#profile-email").inner_text() == "updated@example.com"
+                page.locator("#profile-toggle").click()
+                page.get_by_role("button", name="Аккаунттан шығу", exact=True).click()
+                page.wait_for_url(BASE + "/")
+                page.goto(BASE + "/auth", wait_until="networkidle")
+                page.locator('#login-form [data-mode="forgot"]').click()
+                page.locator("#forgot-identifier").fill("updated@example.com")
+                page.request.post(BASE + "/__test__/allow-mail")
+                page.locator("#forgot-form button[type=submit]").click()
+                page.locator("#verification-code").wait_for(state="visible")
+                page.locator("#verification-code").fill(page.request.get(BASE + "/__test__/mail").json()["code"])
+                page.locator("#reset-password").fill("1111")
+                page.locator("#reset-confirmation").fill("1111")
+                page.locator("#code-form button[type=submit]").click()
+                page.get_by_text("Құпиясөз өзгертілді. Қайта кіріңіз.", exact=True).wait_for()
+                page.locator("#login-identifier").fill("reader_new")
+                page.locator("#login-password").fill("1111")
+                page.locator("#login-form button[type=submit]").click()
+                page.wait_for_url(BASE + "/profile")
+                # A separate browser context becomes admin only after mailbox proof.
+                admin_context = browser.new_context(viewport={"width": 1280, "height": 1000})
+                admin_page = admin_context.new_page()
+                admin_page.set_default_timeout(15000)
+                admin_page.on("dialog", lambda dialog: dialog.accept())
+                admin_page.on("pageerror", lambda error: errors.append(str(error)))
+                admin_page.goto(BASE + "/auth", wait_until="networkidle")
+                admin_page.screenshot(path=str(Path(tempfile.gettempdir()) / "tekser-auth-login.png"), full_page=True)
+                admin_page.locator("#switch-auth").click()
+                admin_page.locator("#register-username").fill("owner")
+                admin_page.locator("#register-email").fill("owner@example.com")
+                admin_page.locator("#register-password").fill("abcd")
+                admin_page.locator("#register-confirmation").fill("abcd")
+                admin_page.wait_for_timeout(700)
+                admin_page.screenshot(path=str(Path(tempfile.gettempdir()) / "tekser-auth-register.png"), full_page=True)
+                for width in (320, 390, 768, 1024):
+                    admin_page.set_viewport_size({"width": width, "height": 844})
+                    assert not admin_page.evaluate("()=>document.documentElement.scrollWidth>innerWidth"), width
+                    admin_page.wait_for_timeout(750 if width > 600 else 50)
+                    assert admin_page.locator("#register-username").evaluate("(input)=>{const r=input.getBoundingClientRect();return r.left>=0 && r.right<=innerWidth;}"), width
+                admin_page.set_viewport_size({"width": 390, "height": 844})
+                admin_page.screenshot(path=str(Path(tempfile.gettempdir()) / "tekser-auth-mobile.png"), full_page=True)
+                admin_page.set_viewport_size({"width": 1280, "height": 1000})
+                admin_page.locator("#register-form button[type=submit]").click()
+                admin_page.locator("#verification-code").wait_for(state="visible")
+                admin_page.locator("#verification-code").fill(admin_page.request.get(BASE + "/__test__/mail").json()["code"])
+                admin_page.locator("#code-form button[type=submit]").click()
+                admin_page.wait_for_url(BASE + "/profile")
+                admin_page.goto(BASE + "/admin", wait_until="networkidle")
+                admin_page.locator(".admin-stats").wait_for()
+                admin_page.screenshot(path=str(Path(tempfile.gettempdir()) / "tekser-admin-desktop.png"), full_page=True)
+                admin_page.locator('[data-admin="users"]').click()
+                row = admin_page.locator("tbody tr").filter(has_text="reader_new")
+                row.get_by_role("button", name="Бұғаттау", exact=True).click()
+                row.get_by_role("button", name="Ашу", exact=True).wait_for()
+                assert page.request.get(BASE + "/api/auth/me").json()["user"] is None
+                row.get_by_role("button", name="Ашу", exact=True).click()
+                row.get_by_role("button", name="Бұғаттау", exact=True).wait_for()
+                for section in ("pending", "services", "audit"):
+                    admin_page.locator(f'[data-admin="{section}"]').click()
+                    admin_page.locator("#admin-content h2").wait_for()
+                for width in (320, 390, 768, 1024):
+                    admin_page.set_viewport_size({"width": width, "height": 844})
+                    assert not admin_page.evaluate("()=>document.documentElement.scrollWidth>innerWidth"), width
+                admin_page.set_viewport_size({"width": 390, "height": 844})
+                admin_page.screenshot(path=str(Path(tempfile.gettempdir()) / "tekser-admin-mobile.png"), full_page=True)
+                admin_context.close()
+                assert not errors, errors
                 browser.close()
-            print("PASS: partial result → reload → topic-only retry → keyboard feedback → edit revision → score/text comparison → duplicate-submit protection → mobile/legacy-safe rendering. AI fixtures only.")
+            print("PASS: verified registration and eye toggles → private essay analysis/revision → profile/password/verified-email changes → logout/reset/login → separate admin, block/unblock and session revocation → responsive layouts. AI and email fixtures only.")
         finally:
             process.terminate()
             try:

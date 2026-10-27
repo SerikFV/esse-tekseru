@@ -63,6 +63,7 @@ function setBusy(value, message = "") {
 async function api(path, options = {}) {
   const response = await fetch(path, {
     ...options,
+    headers: { "X-Requested-With": "tekSER", ...options.headers },
     signal: AbortSignal.timeout(190000),
   });
   if (response.status === 204) return null;
@@ -76,7 +77,7 @@ async function api(path, options = {}) {
     throw new Error(
       typeof data.detail === "string"
         ? data.detail
-        : "Сұрауды орындау мүмкін болмады.",
+        : data.detail?.message || "Сұрауды орындау мүмкін болмады.",
     );
   return data;
 }
@@ -658,7 +659,7 @@ async function retry(section) {
     updateRetryButtons();
   }
 }
-async function openEssay(id) {
+async function openEssay(id, scroll = true) {
   if (busy) return;
   const token = ++viewToken;
   clearTimeout(pollTimer);
@@ -671,12 +672,25 @@ async function openEssay(id) {
     $("title").value = data.title;
     $("essay").value = data.essay_text;
     count();
-    await follow(data);
+    await follow(data, scroll);
   } catch (e) {
     if (token === viewToken) error(e.message);
   }
 }
 async function history(append = false) {
+  if (!window.tekserUser) {
+    $("history-list").replaceChildren(
+      node(
+        "p",
+        "Жұмыстарыңызды сақтау және тарихты көру үшін аккаунтыңызға кіріңіз.",
+        "muted",
+      ),
+    );
+    const link = node("a", "Кіру немесе тіркелу", "text-button");
+    link.href = "/auth?next=/";
+    $("history-list").append(link);
+    return;
+  }
   try {
     const offset = append ? historyOffset : 0,
       items = await api(`/api/essays?limit=20&offset=${offset}`);
@@ -739,6 +753,15 @@ $("essay").addEventListener("input", count);
 $("essay-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (busy) return;
+  await window.accountReady;
+  if (!window.tekserUser) {
+    sessionStorage.setItem(
+      "tekser-draft",
+      JSON.stringify({ title: $("title").value, essay_text: $("essay").value }),
+    );
+    location.assign("/auth?next=/");
+    return;
+  }
   error();
   setBusy(true, "Эссе сақталып, тексеруге жіберілуде…");
   const body = {
@@ -820,6 +843,11 @@ $("upload-image").onclick = () => $("image").click();
 $("image").addEventListener("change", async () => {
   const image = $("image").files[0];
   if (!image || busy) return;
+  if (!window.tekserUser) {
+    error("Суреттен мәтін тану үшін алдымен аккаунтыңызға кіріңіз.");
+    $("image").value = "";
+    return;
+  }
   error();
   if (image.size > 8 * 1024 * 1024) {
     error("Сурет көлемі 8 МБ-тан аспауы керек.");
@@ -856,6 +884,22 @@ $("image").addEventListener("change", async () => {
     $("image").value = "";
   }
 });
-history();
-const last = sessionStorage.getItem("essay-result-id");
-if (last && /^\d+$/.test(last)) openEssay(last);
+window.accountReady.then(() => {
+  history();
+  const last = sessionStorage.getItem("essay-result-id");
+  if (window.tekserUser && last && /^\d+$/.test(last))
+    openEssay(last, !location.hash);
+  else {
+    try {
+      const draft = JSON.parse(sessionStorage.getItem("tekser-draft"));
+      if (draft) {
+        $("title").value = draft.title;
+        $("essay").value = draft.essay_text;
+        count();
+        sessionStorage.removeItem("tekser-draft");
+      }
+    } catch {
+      sessionStorage.removeItem("tekser-draft");
+    }
+  }
+});

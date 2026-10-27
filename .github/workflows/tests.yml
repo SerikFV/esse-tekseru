@@ -33,6 +33,7 @@ jobs:
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m pytest -q
       - run: node --check frontend/script.js
+      - run: node --check frontend/account.js
       - run: python -m pip install -r requirements-browser.txt
       - run: python -m playwright install --with-deps chromium
       - run: python tests/browser_smoke.py
