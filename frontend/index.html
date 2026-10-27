@@ -20,41 +20,55 @@
       sizes="180x180"
       href="/static/assets/tekser-apple-touch.png"
     />
-    <link rel="stylesheet" href="/static/style.css" />
-    <script src="/static/script.js" defer></script>
+    <link rel="stylesheet" href="/static/style.css?v=editorial-1" />
+    <script src="/static/script.js?v=editorial-1" defer></script>
   </head>
   <body>
+    <a class="skip-link" href="#title">Мәтінге өту</a>
     <header>
       <a class="brand" href="/" aria-label="tekSER — басты бет">
         <img
           src="/static/assets/tekser-icon.webp"
-          width="48"
-          height="48"
+          width="40"
+          height="40"
           alt=""
         />
         <span class="brand-wordmark">tek<strong>SER</strong></span>
       </a>
-      <span class="tag">ҚАЗАҚ ТІЛІНДЕГІ AI КӨМЕКШІ</span>
+      <nav class="main-nav" aria-label="Негізгі мәзір">
+        <a href="#workspace">Жазу</a>
+        <a href="#history">Тарих</a>
+        <a href="#rubric">Өлшемдер</a>
+      </nav>
+      <span class="tag">ҚАЗАҚ ТІЛІНДЕГІ<br />AI КӨМЕКШІ</span>
     </header>
     <main>
       <section class="intro">
-        <p class="eyebrow">ЖАЗУ. ОЙЛАНУ. ЖЕТІЛДІРУ.</p>
-        <h1>Ойыңыз анық.<br /><span>Дәлеліңіз мықты болсын.</span></h1>
-        <p>
-          Эссеңіздің құрылымын, аргументтерін және тілдік сапасын талдап,<br
-            class="desktop"
-          />
-          келесі нұсқаңызды жақсартуға нақты бағыт алыңыз.
-        </p>
+        <div>
+          <p class="eyebrow">ЖАЗУ. ОЙЛАНУ. ЖЕТІЛДІРУ.</p>
+          <h1>Жақсы мәтін —<br /><span>жүйелі ой.</span></h1>
+        </div>
+        <div class="intro-copy">
+          <p>Ойыңызды дәлелмен жазыңыз.</p>
+          <p>
+            Эссеңіздің құрылымын, аргументтерін және тілдік сапасын талдап,
+            келесі нұсқаңызды жақсартуға нақты бағыт алыңыз.
+          </p>
+          <span class="intro-caption">ҚАЗАҚША МӘТІНГЕ МҰҚИЯТ КӨЗҚАРАС</span>
+        </div>
       </section>
-      <div class="workspace">
+      <div class="workspace" id="workspace">
         <section class="panel editor" aria-labelledby="editor-title">
           <div class="panel-heading">
-            <h2 id="editor-title">Сіздің эссеңіз</h2>
+            <div class="section-title">
+              <span class="section-number" aria-hidden="true">01</span>
+              <h2 id="editor-title">Эссеңізді жазыңыз</h2>
+            </div>
             <button class="text-button" id="reset" type="button">
               Жаңасын жазу ↗
             </button>
           </div>
+          <p class="editor-hint">Әр жақсы мәтін алғашқы ойдан басталады.</p>
           <div id="revision-info" class="revision-info" hidden></div>
           <form id="essay-form">
             <label for="title">Эссе тақырыбы</label
@@ -66,10 +80,24 @@
               required
             />
             <div class="field-heading">
-              <label for="essay">Эссе мәтіні</label
-              ><label class="upload-label" for="image"
-                >↥ Суреттен мәтін тану</label
-              ><input
+              <label for="essay">Эссе мәтіні</label>
+              <button id="upload-image" class="upload-label" type="button">
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z"
+                  />
+                  <path d="M14 3v5h5M8 13h8M8 17h5" />
+                </svg>
+                Суреттен мәтін тану
+              </button>
+              <input
                 id="image"
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
@@ -81,11 +109,12 @@
               name="essay_text"
               maxlength="30000"
               required
+              aria-describedby="word-count essay-limit"
               placeholder="Ойыңызды осында жазыңыз немесе дайын эссеңізді көшіріп қойыңыз…"
             ></textarea>
             <div class="editor-footer">
               <span id="word-count">0 сөз</span
-              ><span>30 000 таңбаға дейін</span>
+              ><span id="essay-limit">30 000 таңбаға дейін</span>
             </div>
             <p class="privacy">
               Талдау үшін тақырып пен мәтін Google Gemini сервисіне жіберіледі
@@ -98,39 +127,106 @@
             >
             <button class="primary" id="analyze" type="submit">
               <span id="button-text">Эссені талдау</span
-              ><span aria-hidden="true">↗</span>
+              ><svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                aria-hidden="true"
+              >
+                <path d="M4 12h15m-6-6 6 6-6 6" />
+              </svg>
             </button>
           </form>
           <p id="status" role="status" aria-live="polite"></p>
           <p id="error" role="alert" hidden></p>
         </section>
         <aside>
-          <section class="panel rubric">
-            <p class="eyebrow">БАҒАЛАУ ӨЛШЕМДЕРІ</p>
-            <h2>Әр ойдың өз салмағы бар</h2>
-            <p>5 критерий · 100 балл</p>
-            <ul>
-              <li><span>01 &nbsp; Құрылым</span><strong>25</strong></li>
-              <li><span>02 &nbsp; Аргументация</span><strong>30</strong></li>
-              <li><span>03 &nbsp; Логика</span><strong>20</strong></li>
-              <li><span>04 &nbsp; Дәлелдер</span><strong>15</strong></li>
-              <li><span>05 &nbsp; Тілдік сапа</span><strong>10</strong></li>
-            </ul>
+          <section
+            class="panel rubric"
+            id="rubric"
+            aria-labelledby="rubric-title"
+          >
+            <div class="section-title">
+              <span class="section-number" aria-hidden="true">02</span>
+              <h2 id="rubric-title">Бағалау өлшемдері</h2>
+            </div>
+            <p class="rubric-caption">Әр ойдың өз салмағы бар.</p>
+            <ol class="rubric-list">
+              <li>
+                <span class="rubric-index" aria-hidden="true">1</span>
+                <div class="rubric-copy">
+                  <h3>Құрылым</h3>
+                  <p>Кіріспе, негізгі бөлім және қорытынды.</p>
+                </div>
+                <span class="rubric-score">25<small>балл</small></span>
+              </li>
+              <li>
+                <span class="rubric-index" aria-hidden="true">2</span>
+                <div class="rubric-copy">
+                  <h3>Аргументация</h3>
+                  <p>Пікірді негіздеу және қарсы ойды ескеру.</p>
+                </div>
+                <span class="rubric-score">30<small>балл</small></span>
+              </li>
+              <li>
+                <span class="rubric-index" aria-hidden="true">3</span>
+                <div class="rubric-copy">
+                  <h3>Логика</h3>
+                  <p>Ойлардың байланысы мен бірізділігі.</p>
+                </div>
+                <span class="rubric-score">20<small>балл</small></span>
+              </li>
+              <li>
+                <span class="rubric-index" aria-hidden="true">4</span>
+                <div class="rubric-copy">
+                  <h3>Дәлелдер</h3>
+                  <p>Нақты мысалдар және орынды деректер.</p>
+                </div>
+                <span class="rubric-score">15<small>балл</small></span>
+              </li>
+              <li>
+                <span class="rubric-index" aria-hidden="true">5</span>
+                <div class="rubric-copy">
+                  <h3>Тілдік сапа</h3>
+                  <p>Сөз қолданысы, сауаттылық және стиль.</p>
+                </div>
+                <span class="rubric-score">10<small>балл</small></span>
+              </li>
+            </ol>
+            <div class="rubric-total">
+              <span>Жалпы</span><strong>100 <small>балл</small></strong>
+            </div>
             <div class="note">
-              ✳ &nbsp;Тек балл емес.<br />Мәтініңізден нақты үзінділер мен
-              қолдануға болатын ұсыныстар.
+              <strong>Тек балл емес.</strong>
+              Мәтініңізден нақты үзінділер мен қолдануға болатын ұсыныстар.
             </div>
           </section>
-          <section class="panel history">
+          <section
+            class="panel history"
+            id="history"
+            aria-labelledby="history-title"
+          >
+            <p class="eyebrow">САҚТАЛҒАН ЖҰМЫСТАР</p>
             <div class="panel-heading">
-              <h2>Талдау тарихы</h2>
+              <h2 id="history-title">Талдау тарихы</h2>
               <button
                 id="refresh"
                 class="text-button"
                 type="button"
                 aria-label="Тарихты жаңарту"
               >
-                ↻
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  aria-hidden="true"
+                >
+                  <path d="M20 7v5h-5M20 12a8 8 0 1 0-2 5M20 7l-3-2" />
+                </svg>
               </button>
             </div>
             <p class="muted">
@@ -146,7 +242,10 @@
       <section id="results" hidden aria-labelledby="results-title">
         <div class="result-heading">
           <div>
-            <p class="eyebrow">ТАЛДАУ НӘТИЖЕСІ</p>
+            <p class="eyebrow">
+              <span class="section-number" aria-hidden="true">03</span> ТАЛДАУ
+              НӘТИЖЕСІ
+            </p>
             <h2 id="results-title"></h2>
             <p id="summary"></p>
           </div>

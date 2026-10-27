@@ -53,7 +53,7 @@ function error(message = "") {
 }
 function setBusy(value, message = "") {
   busy = value;
-  ["analyze", "reset", "image", "revise"].forEach(
+  ["analyze", "reset", "image", "upload-image", "revise"].forEach(
     (id) => ($(id).disabled = value),
   );
   $("button-text").textContent = value ? "Өңделуде…" : "Эссені талдау";
@@ -133,6 +133,7 @@ function showResult(data, scroll = true) {
     data.analysis?.summary ||
     "Эссе сақталды. Бөлімдер дайын болған сайын осы жерде көрсетіледі.";
   const grade = sectionFor(data, "grade");
+  $("grade-state").dataset.state = grade.status;
   $("grade-state").replaceChildren(node("h3", "Эссе сапасын бағалау"));
   if (grade.status === "ready")
     $("grade-state").append(
@@ -172,7 +173,14 @@ function showResult(data, scroll = true) {
     loadComparison(data);
   }
   updateRetryButtons();
-  if (scroll) $("results").scrollIntoView({ behavior: "smooth" });
+  if (scroll) scrollToElement($("results"));
+}
+function scrollToElement(element) {
+  element.scrollIntoView({
+    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "auto"
+      : "smooth",
+  });
 }
 function showGrade(data) {
   const analysis = data.analysis;
@@ -413,7 +421,7 @@ function startRevision(data, annotation = null) {
       chars.slice(0, annotation.end).join("").length,
     );
   }
-  $("essay-form").scrollIntoView({ behavior: "smooth" });
+  scrollToElement($("essay-form"));
 }
 async function loadComparison(data) {
   const token = ++comparisonToken;
@@ -808,6 +816,7 @@ $("reload-result").onclick = async () => {
 };
 $("refresh").onclick = () => history();
 $("more").onclick = () => history(true);
+$("upload-image").onclick = () => $("image").click();
 $("image").addEventListener("change", async () => {
   const image = $("image").files[0];
   if (!image || busy) return;

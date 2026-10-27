@@ -43,6 +43,12 @@ def main():
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.on("dialog", lambda dialog: dialog.accept())
                 page.goto(BASE, wait_until="networkidle")
+                page.evaluate("()=>document.fonts.ready")
+                # OCR remains a keyboard-accessible action after the visual redesign.
+                page.locator("#upload-image").focus()
+                with page.expect_file_chooser() as chooser:
+                    page.keyboard.press("Enter")
+                assert not chooser.value.is_multiple()
                 original = "😀 Мен кітап оқиды. Кітап пайдалы. <script>alert(1)</script>"
                 page.locator("#title").fill("Климат")
                 page.locator("#essay").fill(original)
@@ -86,8 +92,11 @@ def main():
                 assert page.evaluate("()=>activeResult.id") == second_id
                 counts = page.request.get(BASE + "/__test__/counts").json()
                 assert counts == {"grades": 2, "topics": 3}, counts
+                page.locator("#comparison-panel").screenshot(path=str(Path(tempfile.gettempdir()) / "tekser-editorial-comparison.png"))
+                for width in (320, 390, 768, 1024):
+                    page.set_viewport_size({"width": width, "height": 844})
+                    assert not page.evaluate("()=>document.documentElement.scrollWidth>innerWidth"), width
                 page.set_viewport_size({"width": 390, "height": 844})
-                assert not page.evaluate("()=>document.documentElement.scrollWidth>innerWidth")
                 page.screenshot(path=str(Path(tempfile.gettempdir()) / "esse-workflow-mobile.png"), full_page=True)
                 page.reload(wait_until="networkidle")
                 page.wait_for_function("()=>document.querySelector('#total-score').textContent==='35'")
