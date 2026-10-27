@@ -193,7 +193,11 @@ def main():
                 admin_page.locator("#register-password").fill("abcd")
                 admin_page.locator("#register-confirmation").fill("abcd")
                 admin_page.wait_for_timeout(700)
-                admin_page.screenshot(path=str(Path(tempfile.gettempdir()) / "tekser-auth-register.png"), full_page=True)
+                assert admin_page.locator("#register-username").evaluate("(input)=>{const r=input.getBoundingClientRect(); return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===input;}")
+                # Full-page capture resizes Chromium's surface; freeze transitions only
+                # during the snapshot so it records the settled UI, not a resize frame.
+                admin_page.screenshot(path=str(Path(tempfile.gettempdir()) / "tekser-auth-register.png"), full_page=True,
+                    animations="disabled", style=".auth-stage,.auth-aside{transition:none!important;}")
                 for width in (320, 390, 768, 1024):
                     admin_page.set_viewport_size({"width": width, "height": 844})
                     assert not admin_page.evaluate("()=>document.documentElement.scrollWidth>innerWidth"), width
